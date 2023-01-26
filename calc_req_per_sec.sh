@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Calculate the request count per second through the information from NGINX stub_status and send it to AWS Cloudwatch.
-# requests_per_second = (handled_requests - previous_handled_requests) / interval
+# requests_per_second = (requests - previous_requests) / interval
 
 # Required commands
 curl_cmd=$(command -v curl)
@@ -73,10 +73,15 @@ previous_nginx_status() {
 }
 
 get_nginx_status() {
-  eval $($curl_cmd -s "${NGINX_URI}" |
-    $awk_cmd '/accepts handled requests/ \
+  if [ "$($curl_cmd -sI "${NGINX_URI}" | head -1 | awk '{print $2}')" == "200" ]; then
+    eval $($curl_cmd -s "${NGINX_URI}" |
+      $awk_cmd '/accepts handled requests/ \
       { getline; print "accepts=" $1 " handled=" $2 " requests=" $3 }')
-  export accepts=$accepts handled=$handled requests=$requests
+    export accepts=$accepts handled=$handled requests=$requests
+  else
+    err_catch "Nginx status page not found"
+    exit 1
+  fi
 }
 
 put_metric_to_cloudwatch() {
@@ -112,7 +117,6 @@ main() {
     previous_result_requests="0"
   fi
   interval_seconds=$((${TIMESTAMP} - ${previous_result_time}))
-  interval_seconds="1"
   request_count_per_secound=$(((${requests} - ${previous_result_requests}) / ${interval_seconds}))
 
   echo "requests: ${requests}"
