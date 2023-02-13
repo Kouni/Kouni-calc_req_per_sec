@@ -119,10 +119,6 @@ main() {
   interval_seconds=$((${TIMESTAMP} - ${previous_result_time}))
   request_count_per_secound=$(((${requests} - ${previous_result_requests}) / ${interval_seconds}))
 
-  echo "requests: ${requests}"
-  echo "previous_result_requests: ${previous_result_requests}"
-  echo "interval_seconds: ${interval_seconds}"
-  echo "request_count_per_secound: ${request_count_per_secound}"
   put_metric_to_cloudwatch ${request_count_per_secound}
   echo -n "${TIMESTAMP} ${requests}" >${NGINX_PREVIOUS_STATUS}
 }
