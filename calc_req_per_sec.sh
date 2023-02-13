@@ -60,6 +60,7 @@ check_runtime_requirements() {
 
 }
 
+# export previous nginx status vars
 previous_nginx_status() {
   if [[ ! -f ${NGINX_PREVIOUS_STATUS} ]]; then
     if ! touch ${NGINX_PREVIOUS_STATUS}; then
@@ -72,6 +73,7 @@ previous_nginx_status() {
   fi
 }
 
+# get NGINX stub_status
 get_nginx_status() {
   if [ "$($curl_cmd -sI "${NGINX_URI}" | head -1 | awk '{print $2}')" == "200" ]; then
     eval $($curl_cmd -s "${NGINX_URI}" |
@@ -84,6 +86,7 @@ get_nginx_status() {
   fi
 }
 
+# put metrics to cloudwatch
 put_metric_to_cloudwatch() {
   if [[ -f "/etc/profile.d/ebenv.sh" ]]; then
     source "/etc/profile.d/ebenv.sh"
